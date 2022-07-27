@@ -10,6 +10,9 @@
 
 namespace Joomla\Component\Content\Site\View\Article;
 
+// TS change
+\JLoader::import('twig.library');
+
 use Joomla\CMS\Categories\Categories;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\TagsHelper;
@@ -25,6 +28,12 @@ use Joomla\Component\Content\Site\Helper\AssociationHelper;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
 use Joomla\Event\Event;
 
+// TS change - start
+use Phproberto\Joomla\Twig\Traits\HasLayoutData;
+use Phproberto\Joomla\Twig\View\Traits\HasTwigRenderer;
+
+// TS change - end
+
 /**
  * HTML Article View class for the Content component
  *
@@ -32,6 +41,9 @@ use Joomla\Event\Event;
  */
 class HtmlView extends BaseHtmlView
 {
+    // TS change
+    use HasLayoutData, HasTwigRenderer;
+
     /**
      * The article object
      *
@@ -100,13 +112,13 @@ class HtmlView extends BaseHtmlView
             return;
         }
 
-        $app  = Factory::getApplication();
+        $app = Factory::getApplication();
         $user = $this->getCurrentUser();
 
-        $this->item  = $this->get('Item');
+        $this->item = $this->get('Item');
         $this->print = $app->input->getBool('print', false);
         $this->state = $this->get('State');
-        $this->user  = $user;
+        $this->user = $user;
 
         // Check for errors.
         if (count($errors = $this->get('Errors'))) {
@@ -114,7 +126,7 @@ class HtmlView extends BaseHtmlView
         }
 
         // Create a shortcut for $item.
-        $item            = $this->item;
+        $item = $this->item;
         $item->tagLayout = new FileLayout('joomla.content.tags');
 
         // Add router helpers.
@@ -131,8 +143,8 @@ class HtmlView extends BaseHtmlView
         // Merge article params. If this is single-article view, menu params override article params
         // Otherwise, article params override menu item params
         $this->params = $this->state->get('params');
-        $active       = $app->getMenu()->getActive();
-        $temp         = clone $this->params;
+        $active = $app->getMenu()->getActive();
+        $temp = clone $this->params;
 
         // Check to see which parameters should take priority. If the active menu item link to the current article, then
         // the menu item params take priority
@@ -168,6 +180,9 @@ class HtmlView extends BaseHtmlView
                 $this->setLayout($layout);
             }
         }
+
+        // TS change
+        $this->_layout = $this->_layout . '/' . $this->_layout;
 
         $offset = $this->state->get('list.offset');
 
@@ -247,7 +262,7 @@ class HtmlView extends BaseHtmlView
      */
     protected function _prepareDocument()
     {
-        $app     = Factory::getApplication();
+        $app = Factory::getApplication();
         $pathway = $app->getPathway();
 
         /**
@@ -279,11 +294,11 @@ class HtmlView extends BaseHtmlView
                 $id = 0;
             }
 
-            $path     = array(array('title' => $this->item->title, 'link' => ''));
+            $path = array(array('title' => $this->item->title, 'link' => ''));
             $category = Categories::getInstance('Content')->get($this->item->catid);
 
             while ($category !== null && $category->id != $id && $category->id !== 'root') {
-                $path[]   = array('title' => $category->title, 'link' => RouteHelper::getCategoryRoute($category->id, $category->language));
+                $path[] = array('title' => $category->title, 'link' => RouteHelper::getCategoryRoute($category->id, $category->language));
                 $category = $category->getParent();
             }
 
@@ -335,4 +350,41 @@ class HtmlView extends BaseHtmlView
             $this->document->setMetaData('robots', 'noindex, nofollow');
         }
     }
+
+    // TS change - start
+    /**
+     * Load layout data.
+     *
+     * @return  array
+     */
+    protected function loadLayoutData()
+    {
+        $images = [];
+        $images = json_decode($this->item->images);
+
+        // Prepare og:image
+        $image = $images->image_fulltext;
+
+        if (empty($image) && $images->image_intro) {
+            $image = $images->image_intro;
+        }
+
+        if (!empty($image)) {
+            $size = getimagesize(JPATH_BASE . '/' . $image);
+            $this->document->setMetadata('ogimage', JURI::root() . $image);
+            $this->document->setMetadata('ogwidth', $size[0]);
+            $this->document->setMetadata('ogheight', $size[1]);
+            $this->document->setMetadata('ogmime', $size['mime']);
+        }
+
+        return [
+            'view' => $this,
+            'pageclass_sfx' => $this->pageclass_sfx,
+            'params' => $this->params,
+            'item' => $this->item,
+            'images' => $images,
+            'tags' => $this->item->tags,
+        ];
+    }
+    // TS change - end
 }
