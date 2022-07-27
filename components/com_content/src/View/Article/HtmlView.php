@@ -371,7 +371,7 @@ class HtmlView extends BaseHtmlView
 
         if (!empty($image)) {
             $size = getimagesize(JPATH_BASE . '/' . $image);
-            $this->document->setMetadata('ogimage', JURI::root() . $image);
+            $this->document->setMetadata('ogimage', Uri::root() . $image);
             $this->document->setMetadata('ogwidth', $size[0]);
             $this->document->setMetadata('ogheight', $size[1]);
             $this->document->setMetadata('ogmime', $size['mime']);
