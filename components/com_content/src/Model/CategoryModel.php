@@ -197,8 +197,8 @@ class CategoryModel extends ListModel
         }
 
         $this->setState('list.direction', $listOrder);
-
-        $this->setState('list.start', $app->input->get('limitstart', 0, 'uint'));
+        // TS change
+        $this->setState('list.start', $app->input->get('s', 0, 'uint'));
 
         // Set limit for query. If list, use parameter. If blog, add blog parameters for limit.
         if (($app->input->get('layout') === 'blog') || $params->get('layout_type') === 'blog') {

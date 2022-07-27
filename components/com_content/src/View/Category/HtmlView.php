@@ -10,11 +10,20 @@
 
 namespace Joomla\Component\Content\Site\View\Category;
 
+// TS change
+\JLoader::import('twig.library');
+
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\CategoryView;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
 use Joomla\Registry\Registry;
+
+// TS change - start
+use Phproberto\Joomla\Twig\Traits\HasLayoutData;
+use Phproberto\Joomla\Twig\View\Traits\HasTwigRenderer;
+
+// TS change - end
 
 /**
  * HTML View class for the Content component
@@ -23,6 +32,8 @@ use Joomla\Registry\Registry;
  */
 class HtmlView extends CategoryView
 {
+    // TS change
+    use HasLayoutData, HasTwigRenderer;
     /**
      * @var    array  Array of leading items for blog display
      * @since  3.2
@@ -75,15 +86,15 @@ class HtmlView extends CategoryView
 
         // Prepare the data
         // Get the metrics for the structural page layout.
-        $params     = $this->params;
+        $params = $this->params;
         $numLeading = $params->def('num_leading_articles', 1);
-        $numIntro   = $params->def('num_intro_articles', 4);
-        $numLinks   = $params->def('num_links', 4);
+        $numIntro = $params->def('num_intro_articles', 4);
+        $numLinks = $params->def('num_links', 4);
         $this->vote = PluginHelper::isEnabled('content', 'vote');
 
         PluginHelper::importPlugin('content');
 
-        $app     = Factory::getApplication();
+        $app = Factory::getApplication();
 
         // Compute the article slugs and prepare introtext (runs content plugins).
         foreach ($this->items as $item) {
@@ -94,7 +105,7 @@ class HtmlView extends CategoryView
                 $item->parent_id = null;
             }
 
-            $item->event   = new \stdClass();
+            $item->event = new \stdClass();
 
             // Old plugins: Ensure that text property is available
             if (!isset($item->text)) {
@@ -175,6 +186,9 @@ class HtmlView extends CategoryView
             }
         }
 
+        // TS - change
+        $this->_layout = $this->_layout . '/' . $this->_layout;
+
         parent::display($tpl);
     }
 
@@ -206,11 +220,11 @@ class HtmlView extends CategoryView
             $id = 0;
         }
 
-        $path     = [['title' => $this->category->title, 'link' => '']];
+        $path = [['title' => $this->category->title, 'link' => '']];
         $category = $this->category->getParent();
 
         while ($category !== null && $category->id !== 'root' && $category->id != $id) {
-            $path[]   = ['title' => $category->title, 'link' => RouteHelper::getCategoryRoute($category->id, $category->language)];
+            $path[] = ['title' => $category->title, 'link' => RouteHelper::getCategoryRoute($category->id, $category->language)];
             $category = $category->getParent();
         }
 
@@ -220,4 +234,53 @@ class HtmlView extends CategoryView
             $this->pathway->addItem($item['title'], $item['link']);
         }
     }
+
+    // TS change - start
+    /**
+     * Load layout data.
+     *
+     * @return  array
+     */
+    protected function loadLayoutData()
+    {
+        // Prepare og:image
+        $image = $this->category->params->get('image');
+
+        if (!empty($image)) {
+            $size = getimagesize(JPATH_BASE . '/' . $image);
+            $this->document->setMetadata('ogimage', JURI::root() . $image);
+            $this->document->setMetadata('ogwidth', $size[0]);
+            $this->document->setMetadata('ogheight', $size[1]);
+            $this->document->setMetadata('ogmime', $size['mime']);
+        }
+
+        $app = Factory::getApplication();
+
+        $this->category->text = $this->category->description;
+        $app->triggerEvent('onContentPrepare', array($this->category->extension . '.categories', &$this->category, &$this->params, 0));
+        $this->category->description = $this->category->text;
+
+        $results = $app->triggerEvent('onContentAfterTitle', array($this->category->extension . '.categories', &$this->category, &$this->params, 0));
+        $afterDisplayTitle = trim(implode("\n", $results));
+
+        $results = $app->triggerEvent('onContentBeforeDisplay', array($this->category->extension . '.categories', &$this->category, &$this->params, 0));
+        $beforeDisplayContent = trim(implode("\n", $results));
+
+        $results = $app->triggerEvent('onContentAfterDisplay', array($this->category->extension . '.categories', &$this->category, &$this->params, 0));
+        $afterDisplayContent = trim(implode("\n", $results));
+
+        return [
+            'view' => $this,
+            'pageclass_sfx' => $this->pageclass_sfx,
+            'params' => $this->params,
+            'category' => $this->category,
+            'afterDisplayTitle' => $afterDisplayTitle,
+            'beforeDisplayContent' => $beforeDisplayContent,
+            'afterDisplayContent' => $afterDisplayContent,
+            'intro_items' => $this->intro_items,
+            'lead_items' => $this->lead_items,
+            'pagination' => $this->pagination,
+        ];
+    }
+    // TS change - end
 }
