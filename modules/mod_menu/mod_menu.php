@@ -15,27 +15,27 @@ use Joomla\Module\Menu\Site\Helper\MenuHelper;
 use Joomla\Module\Menu\Site\Module\MenuModule;
 // TS changes - end
 
-$list       = MenuHelper::getList($params);
-$base       = MenuHelper::getBase($params);
-$active     = MenuHelper::getActive($params);
-$default    = MenuHelper::getDefault();
-$active_id  = $active->id;
+$list = MenuHelper::getList($params);
+$base = MenuHelper::getBase($params);
+$active = MenuHelper::getActive($params);
+$default = MenuHelper::getDefault();
+$active_id = $active->id;
 $default_id = $default->id;
-$path       = $base->tree;
-$showAll    = $params->get('showAllChildren', 1);
-$class_sfx  = htmlspecialchars($params->get('class_sfx', ''), ENT_COMPAT, 'UTF-8');
+$path = $base->tree;
+$showAll = $params->get('showAllChildren', 1);
+$class_sfx = htmlspecialchars($params->get('class_sfx', ''), ENT_COMPAT, 'UTF-8');
 
 // TS changes - start
 $data = [
-  'module' => $module,
-  'list' => $list,
-  'active' => $active,
-  'default' => $default,
-  'active_id' => $active_id,
-  'default_id' => $default_id,
-  'path' => $path,
-  'showAll' => $showAll,
-  'class_sfx' => $class_sfx
+    'module' => $module,
+    'list' => $list,
+    'active' => $active,
+    'default' => $default,
+    'active_id' => $active_id,
+    'default_id' => $default_id,
+    'path' => $path,
+    'showAll' => $showAll,
+    'class_sfx' => $class_sfx,
 ];
 
 $modInstance = new MenuModule($params, $module);
