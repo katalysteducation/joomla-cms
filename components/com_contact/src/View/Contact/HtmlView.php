@@ -489,7 +489,7 @@ class HtmlView extends BaseHtmlView
         $current = Uri::current();
         $app = Factory::getApplication();
         $templateName = $app->getTemplate();
-        $url = array_key_exists('url', $_POST) ? $_POST['key'] : '';
+        $url = array_key_exists('url', $_GET) ? $_GET['url'] : '';
         $subjects = [];
         $levels = [];
         $voivodeships = [];
