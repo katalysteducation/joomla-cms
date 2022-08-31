@@ -10,9 +10,10 @@
 
 defined('_JEXEC') or die;
 
-use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\Component\Banners\Administrator\Helper\BannersHelper as BannersComponentHelper;
 use Joomla\Module\Banners\Site\Helper\BannersHelper;
+// TS change
+use Joomla\Module\Banners\Site\Module\BannersModule;
 
 $headerText = trim($params->get('header_text', ''));
 $footerText = trim($params->get('footer_text', ''));
@@ -20,6 +21,22 @@ $footerText = trim($params->get('footer_text', ''));
 BannersComponentHelper::updateReset();
 
 $model = $app->bootComponent('com_banners')->getMVCFactory()->createModel('Banners', 'Site', ['ignore_request' => true]);
-$list  = BannersHelper::getList($params, $model, $app);
+$list = BannersHelper::getList($params, $model, $app);
 
-require ModuleHelper::getLayoutPath('mod_banners', $params->get('layout', 'default'));
+// TS change - Start
+$moduleclassSFX = htmlspecialchars($params->get('moduleclass_sfx', ''), ENT_COMPAT, 'UTF-8');
+
+$data = [
+    'list' => $list,
+    'headerText' => $headerText,
+    'footerText' => $footerText,
+    'class_sfx' => $moduleclassSFX,
+];
+
+$modInstance = new BannersModule($params, $module);
+$modInstance->setData($data);
+
+$layout = '@module/mod_banners/' . explode(':', $params->get('layout', 'default'))[1] . '/' . explode(':', $params->get('layout', 'default'))[1] . '.html.twig';
+
+echo $modInstance->render($layout);
+// TS change - End
