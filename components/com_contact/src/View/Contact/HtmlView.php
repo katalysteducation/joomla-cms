@@ -10,6 +10,9 @@
 
 namespace Joomla\Component\Contact\Site\View\Contact;
 
+// TS change
+\JLoader::import('twig.library');
+
 use Joomla\CMS\Categories\Categories;
 use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
@@ -18,7 +21,14 @@ use Joomla\CMS\MVC\View\GenericDataException;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Router\Route;
+
+// TS change - start
+use Joomla\CMS\Uri\Uri;
 use Joomla\Component\Contact\Site\Helper\RouteHelper;
+use Phproberto\Joomla\Twig\Traits\HasLayoutData;
+use Phproberto\Joomla\Twig\View\Traits\HasTwigRenderer;
+
+// TS change - end
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -31,6 +41,9 @@ use Joomla\Component\Contact\Site\Helper\RouteHelper;
  */
 class HtmlView extends BaseHtmlView
 {
+    // TS change
+    use HasLayoutData, HasTwigRenderer;
+
     /**
      * The item model state
      *
@@ -132,13 +145,13 @@ class HtmlView extends BaseHtmlView
      */
     public function display($tpl = null)
     {
-        $app        = Factory::getApplication();
-        $user       = $this->getCurrentUser();
-        $state      = $this->get('State');
-        $item       = $this->get('Item');
+        $app = Factory::getApplication();
+        $user = $this->getCurrentUser();
+        $state = $this->get('State');
+        $item = $this->get('Item');
         $this->form = $this->get('Form');
-        $params     = $state->get('params');
-        $contacts   = [];
+        $params = $state->get('params');
+        $contacts = [];
 
         $temp = clone $params;
 
@@ -204,7 +217,7 @@ class HtmlView extends BaseHtmlView
         }
 
         $options['category_id'] = $item->catid;
-        $options['order by']    = 'a.default_con DESC, a.ordering ASC';
+        $options['order by'] = 'a.default_con DESC, a.ordering ASC';
 
         /**
          * Handle email cloaking
@@ -329,7 +342,7 @@ class HtmlView extends BaseHtmlView
             $item->text = $item->misc;
         }
 
-        $app->triggerEvent('onContentPrepare', array ('com_contact.contact', &$item, &$item->params, $offset));
+        $app->triggerEvent('onContentPrepare', array('com_contact.contact', &$item, &$item->params, $offset));
 
         // Store the events for later
         $item->event = new \stdClass();
@@ -350,7 +363,7 @@ class HtmlView extends BaseHtmlView
 
         if ($item->params->get('show_user_custom_fields') && $item->user_id && $contactUser = Factory::getUser($item->user_id)) {
             $contactUser->text = '';
-            $app->triggerEvent('onContentPrepare', array ('com_users.user', &$contactUser, &$item->params, 0));
+            $app->triggerEvent('onContentPrepare', array('com_users.user', &$contactUser, &$item->params, 0));
 
             if (!isset($contactUser->jcfields)) {
                 $contactUser->jcfields = array();
@@ -360,11 +373,11 @@ class HtmlView extends BaseHtmlView
         // Escape strings for HTML output
         $this->pageclass_sfx = htmlspecialchars($item->params->get('pageclass_sfx', ''));
 
-        $this->params      = &$item->params;
-        $this->state       = &$state;
-        $this->item        = &$item;
-        $this->user        = &$user;
-        $this->contacts    = &$contacts;
+        $this->params = &$item->params;
+        $this->state = &$state;
+        $this->item = &$item;
+        $this->user = &$user;
+        $this->contacts = &$contacts;
         $this->contactUser = $contactUser;
 
         $model = $this->getModel();
@@ -378,6 +391,9 @@ class HtmlView extends BaseHtmlView
                 break;
             }
         }
+
+        // TS change
+        $this->_layout = $this->_layout . '/' . $this->_layout;
 
         $this->_prepareDocument();
 
@@ -393,7 +409,7 @@ class HtmlView extends BaseHtmlView
      */
     protected function _prepareDocument()
     {
-        $app     = Factory::getApplication();
+        $app = Factory::getApplication();
         $pathway = $app->getPathway();
 
         // Because the application sets a default page title,
@@ -464,4 +480,70 @@ class HtmlView extends BaseHtmlView
             }
         }
     }
+
+    // TS change - start
+    /**
+     * Load layout data.
+     *
+     * @return  array
+     */
+    protected function loadLayoutData()
+    {
+        $baseUrl = Uri::base();
+        $current = Uri::current();
+        $app = Factory::getApplication();
+        $templateName = $app->getTemplate();
+        $url = array_key_exists('url', $_GET) ? $_GET['url'] : '';
+        $subjects = [];
+        $levels = [];
+        $voivodeships = [];
+        $layout = explode('/', $this->getLayout())[0];
+
+        $fieldsets = $this->form->getFieldsets();
+
+        foreach ($fieldsets as $fieldset) {
+            if ($fieldset->name != 'contact') {
+                $fields = $this->form->getFieldset($fieldset->name);
+
+                foreach ($fields as $field) {
+                    $field->inputHTML = sprintf($field->input);
+                    $field->labelHTML = sprintf($field->label);
+
+                    if ($field->name === 'jform[com_fields][contactschoolsubject]') {
+                        foreach ($field->options as $option) {
+                            $subjects[] = $option->value;
+                        }
+                    }
+                    if ($field->name === 'jform[com_fields][contactschoollevel]') {
+                        foreach ($field->options as $option) {
+                            $levels[] = $option->value;
+                        }
+                    }
+
+                    if ($field->name === 'jform[com_fields][contactschoolvoivodeship]') {
+                        foreach ($field->options as $option) {
+                            $voivodeships[] = $option->value;
+                        }
+                    }
+                }
+                $fieldset->fields[] = $fields;
+            }
+        }
+
+        return [
+            'view' => $this,
+            'pageclass_sfx' => $this->pageclass_sfx,
+            'params' => $this->params,
+            'item' => $this->item,
+            'baseUrl' => $baseUrl,
+            'current' => $current,
+            'templateName' => $templateName,
+            'url' => $url,
+            'subjects' => $subjects,
+            'levels' => $levels,
+            'voivodeships' => $voivodeships,
+            'layout' => $layout,
+        ];
+    }
+    // TS change - end
 }
