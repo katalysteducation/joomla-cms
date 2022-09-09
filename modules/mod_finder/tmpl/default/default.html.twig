@@ -1,0 +1,37 @@
+<h3>moduleInstance</h3>
+<pre>{{ dump(moduleInstance) }}</pre>
+
+<h3>params</h3>
+<pre>{{ dump(params) }}</pre>
+
+<h3>route</h3>
+<pre>{{ dump(data.route) }}</pre>
+
+<h3>query</h3>
+<pre>{{ dump(data.query) }}</pre>
+
+<h3>search</h3>
+<pre>{{ dump(data.search) }}</pre>
+
+<h3>subjects</h3>
+<pre>{{ dump(data.subjects) }}</pre>
+
+<h3>levels</h3>
+<pre>{{ dump(data.levels) }}</pre>
+
+<h3>types</h3>
+<pre>{{ dump(data.types) }}</pre>
+
+<!-- SEARCHBOX -->
+<section data-ee="SearchBox" data-mode="regular" data-click="hide()">
+	<a href="#" class="searchbox-button active" id="searchbox-button" data-click="open()"><i class="material-icons searchbox-button__icon">search</i></a>
+	<div class="searchbox" id="SearchBox" action="{{ jroute(data.route) }}">
+		<div class="searchbox__box">
+			<div class="searchbox__box__input">
+	  		<input id="SearchInput" type="text" name="search" value="{{ data.search }}" placeholder="Wpisz tytuł wideo, kod podstawy lub szukaną frazę...">
+				<a href="#" class="searchbox__box__input__close" data-click="close()"><i class="material-icons searchbox__box__input__close__icon">close</i></a>
+			</div>
+		</div>
+	</div>
+</section>
+<!-- ./SEARCHBOX -->
